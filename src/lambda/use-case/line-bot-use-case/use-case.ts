@@ -93,6 +93,21 @@ const dispatchEvent = async({
         text: webhookEvent.message.text,
         quoteToken: quoteToken,
       });
+      // クリップボードアクションを使ったテンプレートを送信
+      commandResult.push({
+        type: "template",
+        altText: "文字をオウム返しします",
+        template: {
+          type: "buttons",
+          title: "オウム返しボットテスト",
+          text: "オウム返しテキストをクリップボードへコピーします",
+          actions: [{
+            type: "clipboard",
+            label: "コピー",
+            clipboardText: webhookEvent.message.text,
+          },],
+        }
+      });
     }
     console.log("commandResult : ", commandResult);
     // LINE リプライ実行

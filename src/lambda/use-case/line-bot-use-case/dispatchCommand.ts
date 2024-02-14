@@ -1,20 +1,8 @@
+import { messagingApi } from "@line/bot-sdk";
 import { MemoStoreRepository } from "../../domain/model/memoStore/memoStore-repository";
 import { ImageCraftRepository } from "../../domain/model/imageCraft/imageCraft-repository";
 
-type TextReplyMessage = {
-  type: string;
-  text: string;
-  quoteToken: string;
-}
-type ImageReplyMessage = {
-  type: string;
-  originalContentUrl: string;
-  previewImageUrl: string;
-}
-export type ReplyMessage =
-  | TextReplyMessage
-  | ImageReplyMessage;
-export type ReplyMessages = Array<ReplyMessage>;
+export type ReplyMessages = Array<messagingApi.Message>;
 
 /**
  * register コマンド実行処理
