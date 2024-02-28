@@ -1,4 +1,5 @@
 import { WebhookRequestBody, WebhookEvent } from "@line/bot-sdk";
+import { FollowEvent } from "@line/bot-sdk/dist/webhook/api";
 import { LineBot } from "../../domain/support/line-bot/line-bot";
 import { MemoStoreRepository } from "../../domain/model/memoStore/memoStore-repository";
 import { ImageCraftRepository } from "../../domain/model/imageCraft/imageCraft-repository";
@@ -36,83 +37,98 @@ const dispatchEvent = async({
   imageCraftRepository: ImageCraftRepository,
 }): Promise<ExecWebhookEventResult> => {
   console.log("LINE Bot use case start.", webhookEvent);
-  if (webhookEvent.type !== "message" || webhookEvent.message.type !== "text") {
-    console.error("メッセージがテキストではない");
-    return new UnexpectedError();
-  }
-  const requestText: string = webhookEvent.message.text;
-  const lineUserId: string = webhookEvent.source.userId || "";
-  const quoteToken = webhookEvent.message.quoteToken;
-  const replyToken = webhookEvent.replyToken;
-  const commandResult: ReplyMessages = [];
 
   try {
-    if (requestText.startsWith("regist:")) {
-      // データ登録機能
-      const resultRegisterCommand = await execRegisterCommand({
-        memoStoreRepository,
-        lineUserId,
-        memoText: requestText.replace("regist:", ""),
-        quoteToken,
-      });
-      console.log("result : ", resultRegisterCommand);
-      resultRegisterCommand.map((item) => commandResult.push(item));
-    } else if (requestText.startsWith("list")) {
-      // データ一覧表示機能
-      const resultListCommand = await execListCommand({
-        memoStoreRepository,
-        lineUserId,
-        quoteToken,
-        maxListNumber: Number(process.env.TABLE_MAXIMUM_NUMBER_OF_RECORD) || 5,
-      });
-      console.log("result : ", resultListCommand);
-      resultListCommand.map((item) => commandResult.push(item));
-    } else if (requestText.startsWith("delete:")) {
-      // データ削除機能
-      const resultDeleteCommand = await execDeleteCommand({
-        memoStoreRepository,
-        lineUserId,
-        messageId: Number(requestText.replace("delete:", "")),
-        quoteToken,
-      });
-      console.log("result : ", resultDeleteCommand);
-      resultDeleteCommand.map((item) => commandResult.push(item));
-    } else if (requestText.startsWith("ask:")) {
-      // 生成 AI へ画像生成依頼機能
-      const resultAskCommand = await execAskCommand({
-        imageCraftRepository,
-        orderedText: requestText.replace("ask:", ""),
-        quoteToken,
-      });
-      console.log("result : ", resultAskCommand);
-      resultAskCommand.map((item) => commandResult.push(item));
-    } else {
-      // オウム返し
-      commandResult.push({
-        type: "text",
-        text: webhookEvent.message.text,
-        quoteToken: quoteToken,
-      });
-      // クリップボードアクションを使ったテンプレートを送信
-      commandResult.push({
-        type: "template",
-        altText: "文字をオウム返しします",
-        template: {
-          type: "buttons",
-          title: "オウム返しボットテスト",
-          text: "オウム返しテキストをクリップボードへコピーします",
-          actions: [{
-            type: "clipboard",
-            label: "コピー",
-            clipboardText: webhookEvent.message.text,
-          },],
+    const commandResult: ReplyMessages = [];
+    if (webhookEvent.type === "follow") {
+      const followEvent: FollowEvent = (webhookEvent as FollowEvent);
+      if (followEvent.follow !== null) {
+        if (followEvent.follow.isUnblocked === true) {
+          commandResult.push({
+            type: "text",
+            text: "おかえりなさいませ！",
+          });
+        } else {
+          commandResult.push({
+            type: "text",
+            text: "いらっしゃいませ！",
+          });
         }
-      });
+      }
+    } else if (webhookEvent.type === "message" && webhookEvent.message.type === "text") {
+      const requestText: string = webhookEvent.message.text;
+      const lineUserId: string = webhookEvent.source.userId || "";
+      const quoteToken = webhookEvent.message.quoteToken;
+      if (requestText.startsWith("regist:")) {
+        // データ登録機能
+        const resultRegisterCommand = await execRegisterCommand({
+          memoStoreRepository,
+          lineUserId,
+          memoText: requestText.replace("regist:", ""),
+          quoteToken,
+        });
+        console.log("result : ", resultRegisterCommand);
+        resultRegisterCommand.map((item) => commandResult.push(item));
+      } else if (requestText.startsWith("list")) {
+        // データ一覧表示機能
+        const resultListCommand = await execListCommand({
+          memoStoreRepository,
+          lineUserId,
+          quoteToken,
+          maxListNumber: Number(process.env.TABLE_MAXIMUM_NUMBER_OF_RECORD) || 5,
+        });
+        console.log("result : ", resultListCommand);
+        resultListCommand.map((item) => commandResult.push(item));
+      } else if (requestText.startsWith("delete:")) {
+        // データ削除機能
+        const resultDeleteCommand = await execDeleteCommand({
+          memoStoreRepository,
+          lineUserId,
+          messageId: Number(requestText.replace("delete:", "")),
+          quoteToken,
+        });
+        console.log("result : ", resultDeleteCommand);
+        resultDeleteCommand.map((item) => commandResult.push(item));
+      } else if (requestText.startsWith("ask:")) {
+        // 生成 AI へ画像生成依頼機能
+        const resultAskCommand = await execAskCommand({
+          imageCraftRepository,
+          orderedText: requestText.replace("ask:", ""),
+          quoteToken,
+        });
+        console.log("result : ", resultAskCommand);
+        resultAskCommand.map((item) => commandResult.push(item));
+      } else {
+        // オウム返し
+        commandResult.push({
+          type: "text",
+          text: webhookEvent.message.text,
+          quoteToken: quoteToken,
+        });
+        // クリップボードアクションを使ったテンプレートを送信
+        commandResult.push({
+          type: "template",
+          altText: "文字をオウム返しします",
+          template: {
+            type: "buttons",
+            title: "オウム返しボットテスト",
+            text: "オウム返しテキストをクリップボードへコピーします",
+            actions: [{
+              type: "clipboard",
+              label: "コピー",
+              clipboardText: webhookEvent.message.text,
+            },],
+          }
+        });
+      }
+    } else {
+      console.error("メッセージが受け付けられない形式");
+      return new UnexpectedError();
     }
     console.log("commandResult : ", commandResult);
     // LINE リプライ実行
     await lineBotClient.replyMessage({
-      replyToken,
+      replyToken: webhookEvent.replyToken,
       messages: commandResult,
     });
   } catch (e) {
