@@ -42,7 +42,7 @@ const dispatchEvent = async({
     const commandResult: ReplyMessages = [];
     if (webhookEvent.type === "follow") {
       const followEvent: FollowEvent = (webhookEvent as FollowEvent);
-      if (followEvent.follow !== null) {
+      if (followEvent.follow != null) {
         if (followEvent.follow.isUnblocked === true) {
           commandResult.push({
             type: "text",
