@@ -1,45 +1,45 @@
-import { Duration, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
-import { RestApi, LambdaIntegration } from "aws-cdk-lib/aws-apigateway";
-import { Table, AttributeType } from "aws-cdk-lib/aws-dynamodb";
-import { StringParameter } from "aws-cdk-lib/aws-ssm";
-import { Bucket } from "aws-cdk-lib/aws-s3"
-import { PolicyStatement, Role, Effect, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as lambdaNodejs from "aws-cdk-lib/aws-lambda-nodejs";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as iam from "aws-cdk-lib/aws-iam";
 
-export class LineBotTestStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
+export class LineBotTestStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // example resource
     // Lambda 関数の作成
-    const roleMemoBot = new Role(this, "LineMemoRole", {
-      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+    const roleMemoBot = new iam.Role(this, "LineMemoRole", {
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
     });
-    const lambdaMemoBot = new Function(this, "LineMemoBot", {
-      runtime: Runtime.NODEJS_18_X,
-      handler: "handler/line-bot/line-bot.handler",
-      code: Code.fromAsset("src/lambda"),
+    const lambdaMemoBot = new lambdaNodejs.NodejsFunction(this, "LineMemoBot", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: "../backend/src/handler/line-bot/line-bot.ts",
       environment: {
         SECRET_ID: "LineAccessInformation",
         TABLE_MAXIMUM_NUMBER_OF_RECORD: "5",
       },
       role: roleMemoBot,
-      timeout: Duration.seconds(120),
+      timeout: cdk.Duration.seconds(120),
     });
 
     // DynamoDB の作成
-    const dynamoMemoBot = new Table(this, "dynamoMemoTable", {
+    const dynamoMemoBot = new dynamodb.Table(this, "dynamoMemoTable", {
       tableName: "LineMemoBot_memo",
-      partitionKey: { name: "lineUserId", type: AttributeType.STRING },
-      sortKey: { name: "messageId", type: AttributeType.NUMBER },
+      partitionKey: { name: "lineUserId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "messageId", type: dynamodb.AttributeType.NUMBER },
     });
     // 作ったテーブル名を Lambda の環境変数へセット
     lambdaMemoBot.addEnvironment("TABLE_NAME", dynamoMemoBot.tableName);
 
     // S3 の作成
-    const s3MemoBot = new Bucket(this, "s3MemoBucket", {
-      removalPolicy: RemovalPolicy.DESTROY,
+    const s3MemoBot = new s3.Bucket(this, "s3MemoBucket", {
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
     // 作ったバケットを Lambda の環境変数へセット
@@ -47,11 +47,11 @@ export class LineBotTestStack extends Stack {
 
     // 権限付与
     // Lambda -> Systems Manager
-    const ssmChannelSecret = StringParameter.fromSecureStringParameterAttributes(this, "ssmChannelSecret", {
+    const ssmChannelSecret = ssm.StringParameter.fromSecureStringParameterAttributes(this, "ssmChannelSecret", {
       parameterName: "/LineAccessInformation/CHANNEL_SECRET",
     });
     ssmChannelSecret.grantRead(lambdaMemoBot);
-    const ssmAccessToken = StringParameter.fromSecureStringParameterAttributes(this, "ssmAccessToken", {
+    const ssmAccessToken = ssm.StringParameter.fromSecureStringParameterAttributes(this, "ssmAccessToken", {
       parameterName: "/LineAccessInformation/ACCESS_TOKEN",
     });
     ssmAccessToken.grantRead(lambdaMemoBot);
@@ -62,14 +62,14 @@ export class LineBotTestStack extends Stack {
     s3MemoBot.grantPutAcl(lambdaMemoBot);
     s3MemoBot.grantReadWrite(lambdaMemoBot);
     // Lambda -> Bedrock
-    const policyBedrock = new PolicyStatement({
-      effect: Effect.ALLOW,
+    const policyBedrock = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
       actions: ["bedrock:InvokeModel"],
       resources: ["*"],
     });
     lambdaMemoBot.addToRolePolicy(policyBedrock);
-    const policyCloudWatch = new PolicyStatement({
-      effect: Effect.ALLOW,
+    const policyCloudWatch = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
       actions: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents",],
       resources: ["*"],
     });
@@ -79,11 +79,11 @@ export class LineBotTestStack extends Stack {
     lambdaMemoBot.addEnvironment("BEDROCK_PARAM_STEPS", "50");
 
     // API Gateway の作成
-    const api = new RestApi(this, "LineMemoApi", {
+    const api = new apigateway.RestApi(this, "LineMemoApi", {
       restApiName: "LineMemoApi",
     });
     // proxy ありで API Gateway に渡すインテグレーションを作成
-    const lambdaInteg = new LambdaIntegration(lambdaMemoBot, {
+    const lambdaInteg = new apigateway.LambdaIntegration(lambdaMemoBot, {
       proxy: true,
     });
     // API Gateway の POST イベントと Lambda との紐付け

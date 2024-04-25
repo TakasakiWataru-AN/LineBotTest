@@ -53,7 +53,8 @@ cdk deploy
 
 `cdk deploy`を行った後、Outputs で表示されるエンドポイント URL を LINE 公式アカウントの Messaging API の Webhook URL へ設定してください。
 
-↓下記みたいな表示
+↓ 下記みたいな表示
+
 ```
 $ cdk deploy
 
@@ -71,7 +72,7 @@ arn:aws:cloudformation:...
 %
 ```
 
-## 2回目以降について
+## 2 回目以降について
 
 一度デプロイしてからは TypeScript のソースを変更後、以下のコマンドでデプロイ出来ます。
 
@@ -138,12 +139,12 @@ npm i @aws-sdk/s3-request-presigner
 
 ## コマンドインターフェース
 
-| コマンド | 説明     | フォーマット                           | 応答                                                             |
-| :------- | :------- | :------------------------------------- | :--------------------------------------------------------------- |
-| list     | 一覧表示 | list 以降は何の文字が入っても良い      | 成功時「通し番号 : メモ」を連続出力<br />※最新の5個を取得<br />失敗時 エラーレスポンス |
-| regist   | メモ登録 | regist: 以降の文字をメモとして登録する | 成功時「〜 の内容を登録しました」<br />失敗時 エラーレスポンス   |
+| コマンド | 説明     | フォーマット                           | 応答                                                                                                            |
+| :------- | :------- | :------------------------------------- | :-------------------------------------------------------------------------------------------------------------- |
+| list     | 一覧表示 | list 以降は何の文字が入っても良い      | 成功時「通し番号 : メモ」を連続出力<br />※最新の 5 個を取得<br />失敗時 エラーレスポンス                        |
+| regist   | メモ登録 | regist: 以降の文字をメモとして登録する | 成功時「〜 の内容を登録しました」<br />失敗時 エラーレスポンス                                                  |
 | delete   | 削除     | delete:通し番号 で指定                 | 成功時「番号 の削除が完了しました」<br />失敗時 エラーレスポンス<br />※番号のデータがなくてもエラーにはならない |
-| ask      | 画像生成 | ask:依頼コマンド で指定                | 成功時 画像メッセージを生成して送信<br />失敗時 エラーレスポンス |
+| ask      | 画像生成 | ask:依頼コマンド で指定                | 成功時 画像メッセージを生成して送信<br />失敗時 エラーレスポンス                                                |
 
 ## ファイル構成
 
@@ -151,44 +152,46 @@ npm i @aws-sdk/s3-request-presigner
 
 ```
 /
-┣ bin
-┃ ┗ line_bot_test.ts
-┣ lib
-┃ ┗ line_bot_test-stack.ts
-┣ src
-┃ ┗ lambda
-┃   ┣ di-container
-┃   ┃ ┗ register-container.ts
-┃   ┣ domain
-┃   ┃ ┣ model
-┃   ┃ ┃ ┣ imageCraft
-┃   ┃ ┃ ┃ ┣ imageCraft.ts
-┃   ┃ ┃ ┃ ┗ imageCragt-repository.ts
-┃   ┃ ┃ ┗ memoStore
-┃   ┃ ┃   ┣ memoStore.ts
-┃   ┃ ┃   ┗ memoStore-repository.ts
-┃   ┃ ┗ support
-┃   ┃   ┗ line-bot
-┃   ┃     ┗ line-bot.ts
-┃   ┣ handler
-┃   ┃  ┗ line-bot
-┃   ┃    ┗ line-bot-handler.ts
-┃   ┣ infrastracture
-┃   ┃ ┣ line-bot
-┃   ┃ ┃ ┗ line-bot-impl.ts
-┃   ┃ ┗ repository
-┃   ┃   ┣ imageCraft-bedrock-s3-repository.ts
-┃   ┃   ┗ memoStore-dynamodb-repository.ts
-┃   ┣ use-case
-┃   ┃    ┗ use-case.ts
-┃   ┣ package-lock.json
-┃   ┗ package.json
-┣ test
-┃ ┗ line_bot_test.test.ts
+┣ backend
+┃ ┣ src
+┃ ┃ ┣ di-container
+┃ ┃ ┃ ┗ register-container.ts
+┃ ┃ ┣ domain
+┃ ┃ ┃ ┣ model
+┃ ┃ ┃ ┃ ┣ imageCraft
+┃ ┃ ┃ ┃ ┃ ┣ imageCraft.ts
+┃ ┃ ┃ ┃ ┃ ┗ imageCragt-repository.ts
+┃ ┃ ┃ ┃ ┗ memoStore
+┃ ┃ ┃ ┃   ┣ memoStore.ts
+┃ ┃ ┃ ┃   ┗ memoStore-repository.ts
+┃ ┃ ┃ ┗ support
+┃ ┃ ┃   ┗ line-bot
+┃ ┃ ┃     ┗ line-bot.ts
+┃ ┃ ┣ handler
+┃ ┃ ┃ ┗ line-bot
+┃ ┃ ┃   ┗ line-bot-handler.ts
+┃ ┃ ┣ infrastracture
+┃ ┃ ┃ ┣ line-bot
+┃ ┃ ┃ ┃ ┗ line-bot-impl.ts
+┃ ┃ ┃ ┗ repository
+┃ ┃ ┃   ┣ imageCraft-bedrock-s3-repository.ts
+┃ ┃ ┃   ┗ memoStore-dynamodb-repository.ts
+┃ ┃ ┗ use-case
+┃ ┃   ┗ use-case.ts
+┃ ┗ package.json
+┣ iac
+┃ ┣ bin
+┃ ┃ ┗ line_bot_test.ts
+┃ ┣ lib
+┃ ┃ ┗ line_bot_test-stack.ts
+┃ ┣ test
+┃ ┃ ┗ line_bot_test.test.ts
+┃ ┣ cdk.json
+┃ ┣ package.json
+┃ ┗ tsconfig.json
 ┣ .eslintignore
 ┣ .gitignore
 ┣ .npmignore
-┣ cdk.json
 ┣ jest.config.js
 ┣ LICENSE
 ┣ package-lock.json

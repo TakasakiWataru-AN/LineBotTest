@@ -1,34 +1,33 @@
 {
   "name": "line_bot_test",
   "version": "0.1.0",
-  "bin": {
-    "line_bot_test": "bin/line_bot_test.js"
-  },
+  "workspaces": [
+    "backend",
+    "iac"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build -ws",
     "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk",
-    "update:pkgs": "ncu -u && npm i",
+    "update:pkgs": "ncu -u && npm run update:pkgs -ws && npm i",
     "check:lint": "eslint --cache --max-warnings 0 '**/*.ts'"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/node": "20.11.21",
-    "@typescript-eslint/eslint-plugin": "^7.1.0",
-    "@typescript-eslint/parser": "^7.1.0",
-    "aws-cdk": "2.130.0",
+    "@tsconfig/recommended": "^1.0.6",
+    "@types/node": "20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
+    "esbuild": "^0.20.2",
     "eslint": "^8.57.0",
-    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react": "^7.34.1",
+    "typescript": "5.4.5",
+    "ts-node": "^10.9.2",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
-    "ts-node": "^10.9.2",
-    "typescript": "~5.3.3"
+    "@types/jest": "^29.5.12",
+    "@types/mocha": "^10.0.6"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.130.0",
-    "constructs": "^10.3.0",
-    "npm-check-updates": "^16.14.15",
+    "npm-check-updates": "^16.14.18",
     "source-map-support": "^0.5.21"
   }
 }

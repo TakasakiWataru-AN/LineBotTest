@@ -1,0 +1,24 @@
+{
+  "name": "iac",
+  "version": "0.1.0",
+  "bin": {
+    "line_bot_test": "bin/line_bot_test.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "bootstrap": "cdk bootstrap",
+    "update:pkgs": "ncu -u",
+    "check:lint": "eslint --cache --max-warnings 0 '**/*.ts'"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.138.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.138.0",
+    "constructs": "^10.3.0"
+  }
+}
