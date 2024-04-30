@@ -33,6 +33,7 @@ export class LineBotTestStack extends cdk.Stack {
       tableName: "LineMemoBot_memo",
       partitionKey: { name: "lineUserId", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "messageId", type: dynamodb.AttributeType.NUMBER },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
     // 作ったテーブル名を Lambda の環境変数へセット
     lambdaMemoBot.addEnvironment("TABLE_NAME", dynamoMemoBot.tableName);
