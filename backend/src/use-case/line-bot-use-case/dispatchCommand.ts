@@ -1,4 +1,5 @@
 import { messagingApi } from "@line/bot-sdk";
+import { LineBot } from "@/domain/support/line-bot/line-bot";
 import { MemoStoreRepository } from "../../domain/model/memoStore/memoStore-repository";
 import { ImageCraftRepository } from "../../domain/model/imageCraft/imageCraft-repository";
 
@@ -156,13 +157,13 @@ export const execDeleteCommand = async({
 }
 
 /**
- * ask コマンド実行
+ * ask コマンド実行実関数
  * @param imageCraftRepository : ImageCraft データリポジトリ
  * @param orderedText : 生成要求テキスト
  * @param quoteToken ： LINE のユニークトークン
- * @returns replyMessage 形式
+ * @returns S3 に保存した画像の URL
  */
-export const execAskCommand = async({
+const _execAskCommand = async ({
   imageCraftRepository,
   orderedText,
   quoteToken,
@@ -170,28 +171,58 @@ export const execAskCommand = async({
   imageCraftRepository: ImageCraftRepository,
   orderedText: string,
   quoteToken: string,
-}): Promise<ReplyMessages> => {
-  const reply: ReplyMessages = [];
+}): Promise<string> => {
   try {
     // 画像生成要求
     await imageCraftRepository.createImage({ orderedText, quoteToken });
     // 画像 URL 取得（戻り値に使用するため）
-    const imageUrl = await imageCraftRepository.getImageUrl(quoteToken);
-    // 応答メッセージを作成
-    reply.push({
-      type: "image",
-      originalContentUrl: imageUrl,
-      previewImageUrl: imageUrl,
-    });
+    return await imageCraftRepository.getImageUrl(quoteToken);
   } catch (e) {
-	// コンソールにエラーを出す
+    // コンソールにエラーを出す
     console.error(e);
     // 応答メッセージを作成
-    reply.push({
-      type: "text",
-      text: (e instanceof Error) ? e.message : "画像生成時にエラーが発生しました",
-      quoteToken: quoteToken,
-    });
+    return (e instanceof Error) ? e.message : "画像生成時にエラーが発生しました";
   }
+}
+/**
+ * ask コマンド実行
+ * @param imageCraftRepository : ImageCraft データリポジトリ
+ * @param orderedText : 生成要求テキスト
+ * @param quoteToken ： LINE のユニークトークン
+ * @param lineUserId ： LINE ユーザ ID
+ * @param lineBotClient ： LINE ボットドメインクラス
+ * @returns ReplyMessages 形式での応答
+ */
+export const execAskCommand = async({
+  imageCraftRepository,
+  orderedText,
+  quoteToken,
+  lineUserId,
+  lineBotClient,
+}: {
+  imageCraftRepository: ImageCraftRepository,
+  orderedText: string,
+  quoteToken: string,
+  lineUserId: string,
+  lineBotClient: LineBot,
+}): Promise<ReplyMessages> => {
+  const reply: ReplyMessages = [];
+  // ２処理を並行で動作させ ask コマンドの実行結果を取得する
+  const [, resultCreateImage] = await Promise.all([
+    // 1. ローディングアニメーションを表示させてみる
+    //    replyMessage するとアニメーションは消えるので 30 秒ほど多めに設定しておく
+    lineBotClient.showLoadingAnimation({
+      chatId: lineUserId,
+      loadingSeconds: 30,
+    }),
+    // 2. ask コマンド実行
+    _execAskCommand({ imageCraftRepository, orderedText, quoteToken, })
+  ]);
+  // 応答メッセージを作成
+  reply.push({
+    type: "image",
+    originalContentUrl: resultCreateImage,
+    previewImageUrl: resultCreateImage,
+  })
   return reply;
 }

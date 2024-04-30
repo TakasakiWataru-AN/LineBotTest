@@ -75,6 +75,7 @@ export class LineBotTestStack extends cdk.Stack {
       resources: ["*"],
     });
     lambdaMemoBot.addToRolePolicy(policyCloudWatch);
+    lambdaMemoBot.addEnvironment("BEDROCK_MODELID", "stability.stable-diffusion-xl-v1");
     lambdaMemoBot.addEnvironment("BEDROCK_PARAM_CFG_SCALE", "10");
     lambdaMemoBot.addEnvironment("BEDROCK_PARAM_SEED", "0");
     lambdaMemoBot.addEnvironment("BEDROCK_PARAM_STEPS", "50");

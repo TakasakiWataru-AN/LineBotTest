@@ -37,7 +37,7 @@ export class ImageCraftRepositoryImpl implements ImageCraftRepository {
    */
   private async getAutoImage(orderedText: string): Promise<string> {
     const invokeBedrock = new InvokeModelCommand({
-      modelId: "stability.stable-diffusion-xl-v0",
+      modelId: process.env.BEDROCK_MODELID || "",
       body: JSON.stringify({
         text_prompts: [{ text: orderedText }],
         cfg_scale: this.paramCfgScale,

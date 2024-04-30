@@ -40,14 +40,17 @@ const dispatchEvent = async({
 
   try {
     const commandResult: ReplyMessages = [];
+    // フォローイベント
     if (webhookEvent.type === "follow") {
       const followEvent: FollowEvent = (webhookEvent as FollowEvent);
       if (followEvent.follow != null) {
+        // アンロックからの復帰応答を設定
         if (followEvent.follow.isUnblocked === true) {
           commandResult.push({
             type: "text",
             text: "おかえりなさいませ！",
           });
+        // それ以外は新規追加としてイベント応答を設定
         } else {
           commandResult.push({
             type: "text",
@@ -95,6 +98,8 @@ const dispatchEvent = async({
           imageCraftRepository,
           orderedText: requestText.replace("ask:", ""),
           quoteToken,
+          lineUserId,
+          lineBotClient,
         });
         console.log("result : ", resultAskCommand);
         resultAskCommand.map((item) => commandResult.push(item));
